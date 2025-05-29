@@ -5,6 +5,7 @@ import (
 	"backend/customerrors"
 	"backend/util"
 	"errors"
+	"strconv"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -59,7 +60,14 @@ func Authenticate() gin.HandlerFunc {
 			return
 		}
 
-		ctx.Set(constant.RequestUserId, userId)
+		intUserId, err := strconv.Atoi(userId)
+		if err != nil {
+			ctx.Error(customerrors.NewError(customerrors.CommonErr, "auth error"))
+			ctx.Abort()
+			return
+		}
+
+		ctx.Set(constant.RequestUserId, intUserId)
 		ctx.Set(constant.RequestRoleId, claims.Role)
 		ctx.Next()
 	}

@@ -10,18 +10,15 @@ import (
 
 type UserRepoItf interface {
 	CheckIsEmailExist(context.Context, entity.ReqRegisterUser) (bool, error)
-	RegisterUser(context.Context, entity.ReqRegisterUser)(*entity.User, error)
-	GetUserByEmail(context.Context, entity.ReqLoginUser)(*entity.User, error)
+	RegisterUser(context.Context, entity.ReqRegisterUser) (*entity.User, error)
+	GetUserByEmail(context.Context, entity.ReqLoginUser) (*entity.User, error)
 }
 
 type UserRepoImpl struct {
-	db *sql.DB
 }
 
-func NewUserRepo(dbConn *sql.DB) UserRepoImpl{
-	return UserRepoImpl{
-		db: dbConn,
-	}
+func NewUserRepo() UserRepoImpl {
+	return UserRepoImpl{}
 }
 
 func (ur UserRepoImpl) CheckIsEmailExist(ctx context.Context, req entity.ReqRegisterUser) (bool, error) {
@@ -37,10 +34,10 @@ func (ur UserRepoImpl) CheckIsEmailExist(ctx context.Context, req entity.ReqRegi
 			users
 		where 
 			email = $1`
-	
+
 	err := tx.QueryRowContext(ctx, q, req.Email).Scan(new(string))
 	if err != nil {
-		if errors.Is(err, sql.ErrNoRows){
+		if errors.Is(err, sql.ErrNoRows) {
 			return false, nil
 		}
 
@@ -50,7 +47,7 @@ func (ur UserRepoImpl) CheckIsEmailExist(ctx context.Context, req entity.ReqRegi
 	return true, nil
 }
 
-func (ur UserRepoImpl) RegisterUser(ctx context.Context, req entity.ReqRegisterUser)(*entity.User, error) {
+func (ur UserRepoImpl) RegisterUser(ctx context.Context, req entity.ReqRegisterUser) (*entity.User, error) {
 	tx, ok := ctx.Value(txCtxKey{}).(*sql.Tx)
 	if !ok {
 		return nil, customerrors.NewError(customerrors.DatabaseError, "internal server error")
@@ -64,8 +61,8 @@ func (ur UserRepoImpl) RegisterUser(ctx context.Context, req entity.ReqRegisterU
 		values 
 			($1, $2, $3, NOW(), NOW())
 		returning 
-			id, email, role_id`	
-	
+			id, email, role_id`
+
 	err := tx.QueryRowContext(ctx, q, req.Email, req.Password, req.RoleId).Scan(&user.Id, &user.Email, &user.RoleId)
 
 	if err != nil {
@@ -75,7 +72,7 @@ func (ur UserRepoImpl) RegisterUser(ctx context.Context, req entity.ReqRegisterU
 	return &user, nil
 }
 
-func (ur UserRepoImpl) GetUserByEmail(ctx context.Context, req entity.ReqLoginUser)(*entity.User, error){
+func (ur UserRepoImpl) GetUserByEmail(ctx context.Context, req entity.ReqLoginUser) (*entity.User, error) {
 	tx, ok := ctx.Value(txCtxKey{}).(*sql.Tx)
 	if !ok {
 		return nil, customerrors.NewError(customerrors.DatabaseError, "internal server error")
@@ -89,8 +86,8 @@ func (ur UserRepoImpl) GetUserByEmail(ctx context.Context, req entity.ReqLoginUs
 		from 
 			users
 		where 
-			email = $1`	
-	
+			email = $1`
+
 	err := tx.QueryRowContext(ctx, q, req.Email).Scan(&user.Id, &user.Email, &user.Password, &user.RoleId)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -101,4 +98,3 @@ func (ur UserRepoImpl) GetUserByEmail(ctx context.Context, req entity.ReqLoginUs
 
 	return &user, nil
 }
-

@@ -46,9 +46,17 @@ func (a *App) Init() {
 func (a *App) initRoutes() {
 	trx := repository.NewTransactor(a.DB)
 
-	ur := repository.NewUserRepo(a.DB)
+	ur := repository.NewUserRepo()
 	uuc := usecase.NewUserUsecaseImpl(ur, trx)
 	uh := handler.NewUserHandler(uuc)
+
+	pr := repository.NewPatientRepo()
+	puc := usecase.NewPatientUsecaseImpl(pr, trx)
+	ph := handler.NewPatientHandler(puc)
+
+	mr := repository.NewMedicineRepo()
+	muc := usecase.NewMedicineUsecaseImpl(mr, trx)
+	mh := handler.NewMedicineHandler(muc)
 
 	a.Router.GET("/ping", func(ctx *gin.Context) {
 		ctx.JSON(http.StatusOK, gin.H{
@@ -56,8 +64,20 @@ func (a *App) initRoutes() {
 		})
 	})
 
-	a.Router.POST("/register", uh.RegisterUser)
-	a.Router.POST("/login", uh.LoginUser)
+	v1 := a.Router.Group("/api/v1")
+	{
+		v1.POST("/register", uh.RegisterUser)
+		v1.POST("/login", uh.LoginUser)
+		patients := v1.Group("/patients", middleware.Authenticate()) 
+		{
+			patients.POST("", ph.AddPatient)
+		}
+		medicines := v1.Group("/medicines", middleware.Authenticate()) 
+		{
+			medicines.POST("", mh.AddMedicine)
+		}
+	}
+
 }
 
 func (a *App) Run() {
