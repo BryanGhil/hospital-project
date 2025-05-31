@@ -11,7 +11,9 @@ type PatientRepoItf interface {
 	AddPatient(context.Context, entity.ReqAddPatient) (*entity.Patient, error)
 	GetAllPatients(context.Context, entity.DefaultPageFilter) ([]entity.Patient, error)
 	GetCountOfPatients(context.Context) (*int, error)
-	UpdatePatients(context.Context, int, entity.ReqUpdatePatient) error
+	UpdatePatient(context.Context, int, entity.ReqUpdatePatient) error
+	DeletePatient(context.Context, int) error
+	RestoreDeletedPatient(context.Context, int) error
 }
 
 type PatientRepoImpl struct {
@@ -57,6 +59,8 @@ func (pr PatientRepoImpl) GetAllPatients(ctx context.Context, filter entity.Defa
 			id, full_name, dob, gender, address, phone
 		from 
 			patients
+		where 
+			deleted_at is null
 		order by 
 			id asc
 		limit 
@@ -98,7 +102,8 @@ func (pr PatientRepoImpl) GetCountOfPatients(ctx context.Context) (*int, error) 
 
 	q := `
 		select count(*)
-		from patients`
+		from patients
+		where deleted_at is null`
 
 	err := tx.QueryRowContext(ctx, q).Scan(&count)
 	if err != nil {
@@ -108,7 +113,7 @@ func (pr PatientRepoImpl) GetCountOfPatients(ctx context.Context) (*int, error) 
 
 }
 
-func (pr PatientRepoImpl) UpdatePatients(ctx context.Context, id int, req entity.ReqUpdatePatient) error {
+func (pr PatientRepoImpl) UpdatePatient(ctx context.Context, id int, req entity.ReqUpdatePatient) error {
 	tx, ok := ctx.Value(txCtxKey{}).(*sql.Tx)
 	if !ok {
 		return customerrors.NewError(customerrors.DatabaseError, "internal server error")
@@ -127,6 +132,68 @@ func (pr PatientRepoImpl) UpdatePatients(ctx context.Context, id int, req entity
 			id = $1`
 
 	res, err := tx.ExecContext(ctx, q, id, req.FullName, req.DOB, req.Gender, req.Address, req.Phone)
+	if err != nil {
+		return customerrors.NewError(customerrors.DatabaseError, "error occured")
+	}
+
+	rowAffected, err := res.RowsAffected()
+	if err != nil {
+		return customerrors.NewError(customerrors.DatabaseError, "error occured")
+	}
+
+	if rowAffected == 0 {
+		return customerrors.NewError(customerrors.DatabaseError, "error occured")
+	}
+
+	return nil
+}
+
+func (pr PatientRepoImpl) DeletePatient(ctx context.Context, id int) error {
+	tx, ok := ctx.Value(txCtxKey{}).(*sql.Tx)
+	if !ok {
+		return customerrors.NewError(customerrors.DatabaseError, "internal server error")
+	}
+
+	q := `
+		update 
+			patients 
+		set 
+			deleted_at = NOW()
+		where 
+			id = $1`
+
+	res, err := tx.ExecContext(ctx, q, id)
+	if err != nil {
+		return customerrors.NewError(customerrors.DatabaseError, "error occured")
+	}
+
+	rowAffected, err := res.RowsAffected()
+	if err != nil {
+		return customerrors.NewError(customerrors.DatabaseError, "error occured")
+	}
+
+	if rowAffected == 0 {
+		return customerrors.NewError(customerrors.DatabaseError, "error occured")
+	}
+
+	return nil
+}
+
+func (pr PatientRepoImpl) RestoreDeletedPatient(ctx context.Context, id int) error {
+	tx, ok := ctx.Value(txCtxKey{}).(*sql.Tx)
+	if !ok {
+		return customerrors.NewError(customerrors.DatabaseError, "internal server error")
+	}
+
+	q := `
+		update 
+			patients 
+		set 
+			deleted_at = NULL
+		where 
+			id = $1`
+
+	res, err := tx.ExecContext(ctx, q, id)
 	if err != nil {
 		return customerrors.NewError(customerrors.DatabaseError, "error occured")
 	}

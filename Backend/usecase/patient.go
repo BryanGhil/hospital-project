@@ -11,7 +11,9 @@ import (
 type PatientUsecaseItf interface {
 	AddPatient(context.Context, entity.ReqAddPatient) (*entity.Patient, error)
 	GetAllPatients(context.Context, entity.DefaultPageFilter) (*entity.GetPageResponse, error)
-	UpdatePatients(context.Context, int, entity.ReqUpdatePatient) error
+	UpdatePatient(context.Context, int, entity.ReqUpdatePatient) error
+	DeletePatient(context.Context, int) error
+	RestoreDeletedPatient(context.Context, int) error
 }
 
 type PatientUsecaseImpl struct {
@@ -82,9 +84,41 @@ func (puc PatientUsecaseImpl) GetAllPatients(ctx context.Context, filter entity.
 	return &res, nil
 }
 
-func (puc PatientUsecaseImpl) UpdatePatients(ctx context.Context, id int, req entity.ReqUpdatePatient) error {
-	err := puc.trx.WithinTransactionReturnError(ctx, func(ctx context.Context)error {
-		err := puc.pr.UpdatePatients(ctx, id, req)
+func (puc PatientUsecaseImpl) UpdatePatient(ctx context.Context, id int, req entity.ReqUpdatePatient) error {
+	err := puc.trx.WithinTransactionReturnError(ctx, func(ctx context.Context) error {
+		err := puc.pr.UpdatePatient(ctx, id, req)
+		if err != nil {
+			return err
+		}
+
+		return nil
+	})
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (puc PatientUsecaseImpl) DeletePatient(ctx context.Context, id int) error {
+	err := puc.trx.WithinTransactionReturnError(ctx, func(ctx context.Context) error {
+		err := puc.pr.DeletePatient(ctx, id)
+		if err != nil {
+			return err
+		}
+
+		return nil
+	})
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (puc PatientUsecaseImpl) RestoreDeletedPatient(ctx context.Context, id int) error {
+	err := puc.trx.WithinTransactionReturnError(ctx, func(ctx context.Context) error {
+		err := puc.pr.RestoreDeletedPatient(ctx, id)
 		if err != nil {
 			return err
 		}

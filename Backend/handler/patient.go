@@ -164,7 +164,7 @@ func (ph PatientHandler) UpdatePatients(ctx *gin.Context) {
 		Phone:    reqBody.Phone,
 	}
 
-	err = ph.puc.UpdatePatients(ctx, idInt, reqBodyEntity)
+	err = ph.puc.UpdatePatient(ctx, idInt, reqBodyEntity)
 	if err != nil {
 		ctx.Error(err)
 		return
@@ -172,7 +172,53 @@ func (ph PatientHandler) UpdatePatients(ctx *gin.Context) {
 
 	ctx.JSON(http.StatusOK, dto.Response{
 		Success: true,
-		Message: "successfully update patients",
+		Message: "successfully update patient",
+		Error:   nil,
+		Data:    nil,
+	})
+}
+
+func (ph PatientHandler) DeletePatient(ctx *gin.Context) {
+	id := ctx.Param("id")
+
+	idInt, err := strconv.Atoi(id)
+	if err != nil {
+		ctx.Error(customerrors.NewError(customerrors.InvalidAction, "id not valid"))
+		return
+	}
+
+	err = ph.puc.DeletePatient(ctx, idInt)
+	if err != nil {
+		ctx.Error(err)
+		return
+	}
+
+	ctx.JSON(http.StatusOK, dto.Response{
+		Success: true,
+		Message: "successfully delete patient",
+		Error:   nil,
+		Data:    nil,
+	})
+}
+
+func (ph PatientHandler) RestoreDeletedPatient(ctx *gin.Context) {
+	id := ctx.Param("id")
+
+	idInt, err := strconv.Atoi(id)
+	if err != nil {
+		ctx.Error(customerrors.NewError(customerrors.InvalidAction, "id not valid"))
+		return
+	}
+
+	err = ph.puc.RestoreDeletedPatient(ctx, idInt)
+	if err != nil {
+		ctx.Error(err)
+		return
+	}
+
+	ctx.JSON(http.StatusOK, dto.Response{
+		Success: true,
+		Message: "successfully restore deleted patient",
 		Error:   nil,
 		Data:    nil,
 	})
