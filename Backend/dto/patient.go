@@ -1,15 +1,13 @@
 package dto
 
-import "time"
-
 type Patient struct {
-	ID        int       `json:"patient_id"`
-	FullName  string    `json:"full_name"`
-	DOB       time.Time `json:"dob"`
-	Gender    string    `json:"gender"`
-	Address   string    `json:"address"`
-	Phone     string    `json:"phone"`
-	CreatedBy int       `json:"created_by"`
+	ID        int    `json:"patient_id"`
+	FullName  string `json:"full_name"`
+	DOB       string `json:"dob"`
+	Gender    string `json:"gender"`
+	Address   string `json:"address"`
+	Phone     string `json:"phone"`
+	CreatedBy int    `json:"created_by,omitempty"`
 }
 
 type ReqAddPatient struct {

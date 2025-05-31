@@ -11,3 +11,10 @@ type ErrorRes struct {
 	Field   string `json:"field,omitempty"`
 	Message string `json:"message,omitempty"`
 }
+
+type GetPageResponse struct {
+	Page      int `json:"page"`
+	Limit     int `json:"limit"`
+	CountData int `json:"count_data"`
+	Data      any `json:"data,omitempty"`
+}

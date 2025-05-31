@@ -71,6 +71,7 @@ func (a *App) initRoutes() {
 		patients := v1.Group("/patients", middleware.Authenticate()) 
 		{
 			patients.POST("", ph.AddPatient)
+			patients.GET("", ph.GetAllPatients)
 		}
 		medicines := v1.Group("/medicines", middleware.Authenticate()) 
 		{

@@ -6,6 +6,7 @@ import (
 	"backend/entity"
 	"backend/usecase"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -38,10 +39,10 @@ func (ph PatientHandler) AddPatient(ctx *gin.Context) {
 
 	reqBodyEntity := entity.ReqAddPatient{
 		FullName: reqBody.FullName,
-		DOB: dob,
-		Gender: reqBody.Gender,
-		Address: reqBody.Address,
-		Phone: reqBody.Phone,
+		DOB:      dob,
+		Gender:   reqBody.Gender,
+		Address:  reqBody.Address,
+		Phone:    reqBody.Phone,
 	}
 
 	res, err := ph.puc.AddPatient(ctx, reqBodyEntity)
@@ -51,19 +52,79 @@ func (ph PatientHandler) AddPatient(ctx *gin.Context) {
 	}
 
 	resDto := dto.Patient{
-		ID: res.ID,
-		FullName: res.FullName,
-		DOB: res.DOB,
-		Gender: res.Gender,
-		Address: res.Address,
-		Phone: res.Phone,
+		ID:        res.ID,
+		FullName:  res.FullName,
+		DOB:       res.DOB.Format("2006-01-02"),
+		Gender:    res.Gender,
+		Address:   res.Address,
+		Phone:     res.Phone,
 		CreatedBy: res.CreatedBy,
 	}
 
 	ctx.JSON(http.StatusCreated, dto.Response{
 		Success: true,
 		Message: "successfully add patient",
-		Error: nil,
-		Data: resDto,
+		Error:   nil,
+		Data:    resDto,
+	})
+}
+
+func (ph PatientHandler) GetAllPatients(ctx *gin.Context) {
+	page := ctx.DefaultQuery("page", "1")
+	limit := ctx.DefaultQuery("limit", "10")
+
+	pageInt, err := strconv.Atoi(page)
+	if err != nil {
+		ctx.Error(customerrors.NewError(customerrors.InvalidAction, "page not valid"))
+		return
+	} 
+
+	limitInt, err := strconv.Atoi(limit)
+	if err != nil {
+		ctx.Error(customerrors.NewError(customerrors.InvalidAction, "limit not valid"))
+		return
+	} 
+
+	offset := (pageInt - 1) * limitInt
+
+	filter := entity.DefaultPageFilter{Page: pageInt, Limit: limitInt, Offset: offset}
+
+	res, err := ph.puc.GetAllPatients(ctx, filter)
+	if err != nil {
+		ctx.Error(err)
+		return
+	}
+
+	patients, ok := res.Data.([]entity.Patient)
+	if !ok {
+		ctx.Error(customerrors.NewError(customerrors.CommonErr, "error occured"))
+		return
+	}
+
+	var resPatients []dto.Patient
+
+	for _, val := range patients {
+		resPatients = append(resPatients, dto.Patient{
+			ID:       val.ID,
+			FullName: val.FullName,
+			DOB:      val.DOB.Format("2006-01-02"),
+			Gender:   val.Gender,
+			Address:  val.Address,
+			Phone:    val.Phone,
+		})
+	}
+
+	resDto := dto.GetPageResponse{
+		Page: res.Page,
+		Limit: res.Limit,
+		CountData: res.CountData,
+		Data: resPatients,
+	}
+
+	ctx.JSON(http.StatusOK, dto.Response{
+		Success: true,
+		Message: "successfully get all patients",
+		Error:   nil,
+		Data:    resDto,
 	})
 }

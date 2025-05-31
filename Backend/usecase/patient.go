@@ -10,6 +10,7 @@ import (
 
 type PatientUsecaseItf interface {
 	AddPatient(context.Context, entity.ReqAddPatient) (*entity.Patient, error)
+	GetAllPatients(context.Context, entity.DefaultPageFilter) (*entity.GetPageResponse, error)
 }
 
 type PatientUsecaseImpl struct {
@@ -50,4 +51,32 @@ func (puc PatientUsecaseImpl) AddPatient(ctx context.Context, req entity.ReqAddP
 	}
 
 	return patient, nil
+}
+
+func (puc PatientUsecaseImpl) GetAllPatients(ctx context.Context, filter entity.DefaultPageFilter)(*entity.GetPageResponse, error) {
+	data, err := puc.trx.WithinTransaction(ctx, func(ctx context.Context) (any, error) {
+		patients, err := puc.pr.GetAllPatients(ctx, filter)
+		if err != nil {
+			return nil, err
+		}
+
+		pageCount, err := puc.pr.GetCountOfPatients(ctx)
+		if err != nil {
+			return nil, err
+		}
+
+		res := entity.GetPageResponse{Page: filter.Page, Limit: filter.Limit, CountData: *pageCount, Data: patients}
+
+		return res, nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	res, ok := data.(entity.GetPageResponse)
+	if !ok {
+		return nil, customerrors.NewError(customerrors.CommonErr, "error occured")
+	}
+
+	return &res, nil
 }
