@@ -73,6 +73,7 @@ func (a *App) initRoutes() {
 		{
 			patients.POST("", ph.AddPatient)
 			patients.GET("", ph.GetAllPatients)
+			patients.GET("/:id", ph.GetPatientById)
 			patients.PATCH("/:id", ph.UpdatePatients)
 			patients.DELETE("/:id", ph.DeletePatient)
 			patients.PATCH("/:id/restore", ph.RestoreDeletedPatient)

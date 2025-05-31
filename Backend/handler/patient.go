@@ -129,6 +129,38 @@ func (ph PatientHandler) GetAllPatients(ctx *gin.Context) {
 	})
 }
 
+func (ph PatientHandler) GetPatientById(ctx *gin.Context) {
+	id := ctx.Param("id")
+
+	idInt, err := strconv.Atoi(id)
+	if err != nil {
+		ctx.Error(customerrors.NewError(customerrors.InvalidAction, "id not valid"))
+		return
+	}
+
+	res, err := ph.puc.GetPatientById(ctx, idInt)
+	if err != nil {
+		ctx.Error(err)
+		return
+	}
+
+	resDto := dto.Patient{
+		ID: res.ID,
+		FullName: res.FullName,
+		DOB: res.DOB.Format("2006-01-02"),
+		Gender: res.Gender,
+		Address: res.Address,
+		Phone: res.Phone,
+	}
+
+	ctx.JSON(http.StatusOK, dto.Response{
+		Success: true,
+		Message: "successfully get patient data",
+		Error:   nil,
+		Data:    resDto,
+	})
+}
+
 func (ph PatientHandler) UpdatePatients(ctx *gin.Context) {
 	id := ctx.Param("id")
 

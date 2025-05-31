@@ -10,6 +10,7 @@ import (
 type PatientRepoItf interface {
 	AddPatient(context.Context, entity.ReqAddPatient) (*entity.Patient, error)
 	GetAllPatients(context.Context, entity.DefaultPageFilter) ([]entity.Patient, error)
+	GetPatientById(context.Context, int) (*entity.Patient, error)
 	GetCountOfPatients(context.Context) (*int, error)
 	UpdatePatient(context.Context, int, entity.ReqUpdatePatient) error
 	DeletePatient(context.Context, int) error
@@ -90,6 +91,27 @@ func (pr PatientRepoImpl) GetAllPatients(ctx context.Context, filter entity.Defa
 	}
 
 	return patients, nil
+}
+
+func (pr PatientRepoImpl) GetPatientById(ctx context.Context, id int) (*entity.Patient, error) {
+	tx, ok := ctx.Value(txCtxKey{}).(*sql.Tx)
+	if !ok {
+		return nil, customerrors.NewError(customerrors.DatabaseError, "internal server error")
+	}
+
+	var patient entity.Patient
+
+	q := `
+		select id, full_name, dob, gender, address, phone
+		from patients
+		where id = $1 and deleted_at is null`
+
+	err := tx.QueryRowContext(ctx, q, id).Scan(&patient.ID, &patient.FullName, &patient.DOB, &patient.Gender, &patient.Address, &patient.Phone)
+	if err != nil {
+		return nil, customerrors.NewError(customerrors.DatabaseError, "error occured")
+	}
+	return &patient, nil
+
 }
 
 func (pr PatientRepoImpl) GetCountOfPatients(ctx context.Context) (*int, error) {

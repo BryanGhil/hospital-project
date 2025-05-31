@@ -11,6 +11,7 @@ import (
 type PatientUsecaseItf interface {
 	AddPatient(context.Context, entity.ReqAddPatient) (*entity.Patient, error)
 	GetAllPatients(context.Context, entity.DefaultPageFilter) (*entity.GetPageResponse, error)
+	GetPatientById(context.Context, int) (*entity.Patient, error)
 	UpdatePatient(context.Context, int, entity.ReqUpdatePatient) error
 	DeletePatient(context.Context, int) error
 	RestoreDeletedPatient(context.Context, int) error
@@ -82,6 +83,27 @@ func (puc PatientUsecaseImpl) GetAllPatients(ctx context.Context, filter entity.
 	}
 
 	return &res, nil
+}
+
+func (puc PatientUsecaseImpl) GetPatientById(ctx context.Context, id int) (*entity.Patient, error) {
+	data, err := puc.trx.WithinTransaction(ctx, func(ctx context.Context) (any,error) {
+		res, err := puc.pr.GetPatientById(ctx, id)
+		if err != nil {
+			return nil, err
+		}
+
+		return res, nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	res, ok := data.(*entity.Patient)
+	if !ok {
+		return nil, customerrors.NewError(customerrors.CommonErr, "error occured")
+	}
+
+	return res, nil
 }
 
 func (puc PatientUsecaseImpl) UpdatePatient(ctx context.Context, id int, req entity.ReqUpdatePatient) error {
