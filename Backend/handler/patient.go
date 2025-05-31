@@ -77,13 +77,13 @@ func (ph PatientHandler) GetAllPatients(ctx *gin.Context) {
 	if err != nil {
 		ctx.Error(customerrors.NewError(customerrors.InvalidAction, "page not valid"))
 		return
-	} 
+	}
 
 	limitInt, err := strconv.Atoi(limit)
 	if err != nil {
 		ctx.Error(customerrors.NewError(customerrors.InvalidAction, "limit not valid"))
 		return
-	} 
+	}
 
 	offset := (pageInt - 1) * limitInt
 
@@ -115,10 +115,10 @@ func (ph PatientHandler) GetAllPatients(ctx *gin.Context) {
 	}
 
 	resDto := dto.GetPageResponse{
-		Page: res.Page,
-		Limit: res.Limit,
+		Page:      res.Page,
+		Limit:     res.Limit,
 		CountData: res.CountData,
-		Data: resPatients,
+		Data:      resPatients,
 	}
 
 	ctx.JSON(http.StatusOK, dto.Response{
@@ -126,5 +126,54 @@ func (ph PatientHandler) GetAllPatients(ctx *gin.Context) {
 		Message: "successfully get all patients",
 		Error:   nil,
 		Data:    resDto,
+	})
+}
+
+func (ph PatientHandler) UpdatePatients(ctx *gin.Context) {
+	id := ctx.Param("id")
+
+	idInt, err := strconv.Atoi(id)
+	if err != nil {
+		ctx.Error(customerrors.NewError(customerrors.InvalidAction, "id not valid"))
+		return
+	}
+
+	var reqBody dto.ReqUpdatePatient
+
+	err = ctx.ShouldBindJSON(&reqBody)
+	if err != nil {
+		ctx.Error(err)
+		return
+	}
+
+	var dob *time.Time = nil
+	if reqBody.DOB != nil {
+		dobDate, err := time.Parse("2006-01-02", *reqBody.DOB)
+		if err != nil {
+			ctx.Error(customerrors.NewError(customerrors.InvalidAction, "dob format not valid"))
+			return
+		}
+		dob = &dobDate
+	}
+
+	reqBodyEntity := entity.ReqUpdatePatient{
+		FullName: reqBody.FullName,
+		DOB:      dob,
+		Gender:   reqBody.Gender,
+		Address:  reqBody.Address,
+		Phone:    reqBody.Phone,
+	}
+
+	err = ph.puc.UpdatePatients(ctx, idInt, reqBodyEntity)
+	if err != nil {
+		ctx.Error(err)
+		return
+	}
+
+	ctx.JSON(http.StatusOK, dto.Response{
+		Success: true,
+		Message: "successfully update patients",
+		Error:   nil,
+		Data:    nil,
 	})
 }

@@ -10,7 +10,8 @@ import (
 type PatientRepoItf interface {
 	AddPatient(context.Context, entity.ReqAddPatient) (*entity.Patient, error)
 	GetAllPatients(context.Context, entity.DefaultPageFilter) ([]entity.Patient, error)
-	GetCountOfPatients(context.Context)(*int, error)
+	GetCountOfPatients(context.Context) (*int, error)
+	UpdatePatients(context.Context, int, entity.ReqUpdatePatient) error
 }
 
 type PatientRepoImpl struct {
@@ -56,6 +57,8 @@ func (pr PatientRepoImpl) GetAllPatients(ctx context.Context, filter entity.Defa
 			id, full_name, dob, gender, address, phone
 		from 
 			patients
+		order by 
+			id asc
 		limit 
 			$1
 		offset 
@@ -85,7 +88,7 @@ func (pr PatientRepoImpl) GetAllPatients(ctx context.Context, filter entity.Defa
 	return patients, nil
 }
 
-func (pr PatientRepoImpl) GetCountOfPatients(ctx context.Context)(*int, error) {
+func (pr PatientRepoImpl) GetCountOfPatients(ctx context.Context) (*int, error) {
 	tx, ok := ctx.Value(txCtxKey{}).(*sql.Tx)
 	if !ok {
 		return nil, customerrors.NewError(customerrors.DatabaseError, "internal server error")
@@ -103,4 +106,39 @@ func (pr PatientRepoImpl) GetCountOfPatients(ctx context.Context)(*int, error) {
 	}
 	return &count, nil
 
+}
+
+func (pr PatientRepoImpl) UpdatePatients(ctx context.Context, id int, req entity.ReqUpdatePatient) error {
+	tx, ok := ctx.Value(txCtxKey{}).(*sql.Tx)
+	if !ok {
+		return customerrors.NewError(customerrors.DatabaseError, "internal server error")
+	}
+
+	q := `
+		update 
+			patients 
+		set 
+			full_name = coalesce($2, full_name),
+			dob = coalesce($3, dob),
+			gender = coalesce($4, gender),
+			address = coalesce($5, address),
+			phone = coalesce($6, phone)
+		where 
+			id = $1`
+
+	res, err := tx.ExecContext(ctx, q, id, req.FullName, req.DOB, req.Gender, req.Address, req.Phone)
+	if err != nil {
+		return customerrors.NewError(customerrors.DatabaseError, "error occured")
+	}
+
+	rowAffected, err := res.RowsAffected()
+	if err != nil {
+		return customerrors.NewError(customerrors.DatabaseError, "error occured")
+	}
+
+	if rowAffected == 0 {
+		return customerrors.NewError(customerrors.DatabaseError, "error occured")
+	}
+
+	return nil
 }

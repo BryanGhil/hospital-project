@@ -20,3 +20,11 @@ type ReqAddPatient struct {
 	Phone     string
 	CreatedBy int
 }
+
+type ReqUpdatePatient struct {
+	FullName  *string
+	DOB       *time.Time
+	Gender    *string
+	Address   *string
+	Phone     *string
+}

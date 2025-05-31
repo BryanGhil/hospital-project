@@ -17,3 +17,11 @@ type ReqAddPatient struct {
 	Address  string `json:"address" binding:"required"`
 	Phone    string `json:"phone" binding:"required"`
 }
+
+type ReqUpdatePatient struct {
+	FullName *string `json:"full_name"`
+	DOB      *string `json:"dob"`
+	Gender   *string `json:"gender"`
+	Address  *string `json:"address"`
+	Phone    *string `json:"phone"`
+}

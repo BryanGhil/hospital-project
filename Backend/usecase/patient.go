@@ -11,6 +11,7 @@ import (
 type PatientUsecaseItf interface {
 	AddPatient(context.Context, entity.ReqAddPatient) (*entity.Patient, error)
 	GetAllPatients(context.Context, entity.DefaultPageFilter) (*entity.GetPageResponse, error)
+	UpdatePatients(context.Context, int, entity.ReqUpdatePatient) error
 }
 
 type PatientUsecaseImpl struct {
@@ -53,7 +54,7 @@ func (puc PatientUsecaseImpl) AddPatient(ctx context.Context, req entity.ReqAddP
 	return patient, nil
 }
 
-func (puc PatientUsecaseImpl) GetAllPatients(ctx context.Context, filter entity.DefaultPageFilter)(*entity.GetPageResponse, error) {
+func (puc PatientUsecaseImpl) GetAllPatients(ctx context.Context, filter entity.DefaultPageFilter) (*entity.GetPageResponse, error) {
 	data, err := puc.trx.WithinTransaction(ctx, func(ctx context.Context) (any, error) {
 		patients, err := puc.pr.GetAllPatients(ctx, filter)
 		if err != nil {
@@ -79,4 +80,20 @@ func (puc PatientUsecaseImpl) GetAllPatients(ctx context.Context, filter entity.
 	}
 
 	return &res, nil
+}
+
+func (puc PatientUsecaseImpl) UpdatePatients(ctx context.Context, id int, req entity.ReqUpdatePatient) error {
+	err := puc.trx.WithinTransactionReturnError(ctx, func(ctx context.Context)error {
+		err := puc.pr.UpdatePatients(ctx, id, req)
+		if err != nil {
+			return err
+		}
+
+		return nil
+	})
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

@@ -72,6 +72,7 @@ func (a *App) initRoutes() {
 		{
 			patients.POST("", ph.AddPatient)
 			patients.GET("", ph.GetAllPatients)
+			patients.PATCH("/:id", ph.UpdatePatients)
 		}
 		medicines := v1.Group("/medicines", middleware.Authenticate()) 
 		{
