@@ -38,6 +38,7 @@ func (a *App) Init() {
 
 	a.Router = gin.Default()
 	a.Router.ContextWithFallback = true
+	a.Router.Use(middleware.CORSMiddleware())
 	a.Router.Use(middleware.ErrorMiddleware())
 
 	a.initRoutes()
