@@ -87,6 +87,10 @@ func (a *App) initRoutes() {
 }
 
 func (a *App) Run() {
+	a.Init()
+
+	defer a.DB.Close()
+
 	srv := &http.Server{
 		Addr:    os.Getenv(constant.ServerPort),
 		Handler: a.Router.Handler(),
