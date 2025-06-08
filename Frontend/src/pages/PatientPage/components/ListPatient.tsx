@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import ax from "../../../api/axios";
-import toast from "react-hot-toast";
 import CircularProgress from "@mui/material/CircularProgress";
 
 interface patientdata {
@@ -24,6 +23,7 @@ const defaultPatientData: patientdata = {
 export const ListPatient = () => {
   const [data, setData] = useState<patientdata[]>([defaultPatientData]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const abortController = new AbortController();
@@ -36,12 +36,13 @@ export const ListPatient = () => {
 
       if (res.data?.data?.data) {
         setData(res.data.data.data);
+        setError(null)
       } else {
         throw new Error("Invalid response structure");
       }
-    } catch (error) {
-        if (!abortController.signal.aborted || error != null) { // Only handle non-canceled errors
-          toast.error("Failed to load patient data");
+    } catch (err) {
+        if (!abortController.signal.aborted || err != null) { 
+          setError("Failed to load patient data");
         }
       } finally {
         if (!abortController.signal.aborted) {
@@ -58,7 +59,15 @@ export const ListPatient = () => {
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
-        <CircularProgress style={{ color: 'black' }} /> {/* Black loader */}
+        <CircularProgress style={{ color: 'black' }} />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="text-center py-8 text-black text-xl font-bold">
+        Please try again later
       </div>
     );
   }

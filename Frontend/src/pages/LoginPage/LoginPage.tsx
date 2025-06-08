@@ -158,7 +158,11 @@ export const LoginPage = () => {
             )}
           </FormControl>
           <Button
-            startIcon={loading ? <CircularProgress size={20} sx={{color: "black"}} /> : undefined}
+            startIcon={
+              loading ? (
+                <CircularProgress size={20} sx={{ color: "black" }} />
+              ) : undefined
+            }
             sx={{
               padding: "12px 24px",
               backgroundColor: "black",
