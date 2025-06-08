@@ -5,6 +5,7 @@ import { PatientPage } from "./pages/PatientPage/PatientPage";
 import { LoginPage } from "./pages/LoginPage/LoginPage";
 import { ProtectedRoute } from "./layouts/ProtectedRoute";
 import { PublicRoute } from "./layouts/PublicRoute";
+import { PatientDetailPage } from "./pages/PatientPage/components/PatientDetailPage";
 
 export function App() {
   return (
@@ -17,6 +18,7 @@ export function App() {
         <Route path="/" element={<MainLayout />}>
           <Route index element={<Homepage />}></Route>
           <Route path="patient" element={<PatientPage />}></Route>
+          <Route path="patient/:id" element={<PatientDetailPage />}></Route>
         </Route>
       </Route>
 

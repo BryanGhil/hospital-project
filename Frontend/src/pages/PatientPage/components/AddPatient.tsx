@@ -125,7 +125,7 @@ export const AddPatient = () => {
         onSubmit={handleSubmit}
         className="p-4 bg-white rounded-lg w-full flex flex-col justify-center justify-items-center gap-4"
       >
-        <p className="text-3xl">Add Patient</p>
+        <p className="text-3xl font-bold">Add Patient</p>
         <div className="flex flex-row gap-4">
           <div className="flex flex-col gap-4 w-1/2">
             <FormControl variant="outlined" fullWidth error={!!errors.name}>

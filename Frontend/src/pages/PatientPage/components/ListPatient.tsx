@@ -1,29 +1,15 @@
 import { useEffect, useState } from "react";
 import ax from "../../../api/axios";
 import CircularProgress from "@mui/material/CircularProgress";
-
-interface patientdata {
-  patient_id: number;
-  full_name: string;
-  dob: string;
-  gender: string;
-  address: string;
-  phone: string;
-}
-
-const defaultPatientData: patientdata = {
-  patient_id: 0,
-  full_name: "",
-  dob: "",
-  gender: "",
-  address: "",
-  phone: "",
-};
+import { useNavigate } from "react-router";
+import { defaultPatientData, type patientdata } from "../types/Patient";
 
 export const ListPatient = () => {
   const [data, setData] = useState<patientdata[]>([defaultPatientData]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const navigate = useNavigate();
 
   useEffect(() => {
     const abortController = new AbortController();
@@ -78,22 +64,22 @@ export const ListPatient = () => {
       <table className="min-w-full divide-y divide-gray-200 mt-4">
         <thead className="bg-gray-50">
           <tr>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
               ID
             </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
               Name
             </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
               DOB
             </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
               Gender
             </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
               Address
             </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
               Phone
             </th>
           </tr>
@@ -105,6 +91,7 @@ export const ListPatient = () => {
               className={`
                 ${i % 2 === 0 ? "bg-white" : "bg-gray-50"} 
                 hover:bg-gray-100 cursor-pointer transition-colors duration-150`}
+              onClick={() => navigate(`/patient/${x.patient_id}`)}
             >
               <td className="px-6 py-4 whitespace-nowrap text-sm ">
                 {x.patient_id}
